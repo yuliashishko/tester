@@ -52,15 +52,15 @@ def people_get():
 def test_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
-    response_object['test'] = session.query(Test)
+    response_object['test'] = session.query(Test).all()
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
-@app.route('/question', methods=['GET'])
+@app.route('/questions', methods=['GET'])
 def question_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
-    response_object['question'] = session.query(Question)
+    response_object['questions'] = session.query(Question).all()
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
@@ -68,7 +68,7 @@ def question_get():
 def answer_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
-    response_object['answer'] = session.query(Answer)
+    response_object['answer'] = session.query(Answer).all()
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
@@ -76,7 +76,7 @@ def answer_get():
 def exam_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
-    response_object['exam'] = session.query(Exam)
+    response_object['exam'] = session.query(Exam).all()
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
@@ -105,7 +105,7 @@ def test_post():
     session = db_session.create_session()
     post_data = request.get_json()
     response_object = {'status': 'success'}
-    tests = session.query(Test).filter(post_data.get('id_test') == Test.id_test)
+    tests = session.query(Test).filter(post_data.get('id_test') == Test.id_test).all()
     if not tests:
         test = Test(
             max_mark=post_data.get('max_mark'),
@@ -120,12 +120,12 @@ def test_post():
     return jsonify(response_object)
 
 
-@app.route('/question', methods=['POST'])
+@app.route('/questions', methods=['POST'])
 def question_post():
     session = db_session.create_session()
     post_data = request.get_json()
     response_object = {'status': 'success'}
-    questions = session.query(Question).filter(post_data.get('id_question') == Question.id_question)
+    questions = session.query(Question).filter(post_data.get('id_question') == Question.id_question).all()
     if not questions:
         question = Question(
             max_mark=post_data.get('max_mark'),
@@ -146,7 +146,7 @@ def answer_post():
     session = db_session.create_session()
     post_data = request.get_json()
     response_object = {'status': 'success'}
-    answers = session.query(Answer).filter(post_data.get('id_answer') == Answer.id_answer)
+    answers = session.query(Answer).filter(post_data.get('id_answer') == Answer.id_answer).all()
     if not answers:
         answer = Answer(
             mark=post_data.get('mark'),
@@ -167,7 +167,7 @@ def exam_post():
     session = db_session.create_session()
     post_data = request.get_json()
     response_object = {'status': 'success'}
-    exams = session.query(Exam).filter(post_data.get('id_exam') == Exam.id_exam)
+    exams = session.query(Exam).filter(post_data.get('id_exam') == Exam.id_exam).all()
     if not exams:
         exam = Exam(
             mark=post_data.get('mark'),
@@ -191,23 +191,12 @@ def people_update(id_people):
     put_data = request.get_json()
     people = session.query(People).filter(People.id_people == id_people).first()
     if people:
-        session \
-            .query(People) \
-            .filter(People.id_people == id_people) \
-            .update({
+        session.query(People).filter(People.id_people == id_people).update({
             'name': put_data['name'],
             'group': put_data['group'],
             'username': put_data['username'],
             'password': generate_password_hash(put_data['password'])
         })
-        # session.delete(people)
-        # people = People(
-        #     group=put_data.get('group'),
-        #     name=put_data.get('name'),
-        #     username=put_data.get('username')
-        # )
-        # people.set_password(put_data.get('password'))
-        # session.add(people)
         session.commit()
         response_object['message'] = 'User successfully updated'
     return jsonify(response_object)
@@ -218,34 +207,30 @@ def test_update(id_test):
     session = db_session.create_session()
     response_object = {'status': 'success'}
     put_data = request.get_json()
-    test = session.query(Test).filter(Test.id_test == id_test)
+    test = session.query(Test).filter(Test.id_test == id_test).first()
     if test:
-        session.delete(test)
-        test = Test(
-            max_mark=put_data.get('max_mark'),
-            duration=put_data.get('duration'),
-            questions=put_data.get('questions')  # TODO:Check how to do questions
-        )
-        session.add(test)
+        test.update({
+            'max_mark': put_data.get('max_mark'),
+            'duration': put_data.get('duration'),
+            'questions': put_data.get('questions')
+        })
         session.commit()
         response_object['message'] = 'Test successfully updated'
     return jsonify(response_object)
 
 
-@app.route('/question/<id_question>', methods=['PUT'])
+@app.route('/questions/<id_question>', methods=['PUT'])
 def question_update(id_question):
     session = db_session.create_session()
     response_object = {'status': 'success'}
     put_data = request.get_json()
-    question = session.query(Question).filter(Question.id_question == id_question)
+    question = session.query(Question).filter(Question.id_question == id_question).first()
     if question:
-        session.delete(question)
-        question = Question(
-            question_text=put_data.get('question_text'),
-            max_mark=put_data.get('max_mark'),
-            answers=put_data.get('answers')  # TODO:Check how to do answers
-        )
-        session.add(question)
+        session.query(Question).filter(Question.id_question == id_question).update({
+            'question_text': put_data.get('question_text'),
+            'max_mark': put_data.get('max_mark'),
+            'answers': put_data.get('answers')
+        })
         session.commit()
         response_object['message'] = 'Question successfully updated'
     return jsonify(response_object)
@@ -256,15 +241,13 @@ def answer_update(id_answer):
     session = db_session.create_session()
     response_object = {'status': 'success'}
     put_data = request.get_json()
-    answer = session.query(Answer).filter(Answer.id_answer == id_answer)
+    answer = session.query(Answer).filter(Answer.id_answer == id_answer).first()
     if answer:
-        session.delete(answer)
-        answer = Answer(
-            answer_text=put_data.get('answer_text'),
-            mark=put_data.get('mark'),
-            id_question=put_data.get('id_question')  # TODO:Check how to do exams if needeed
-        )
-        session.add(answer)
+        answer.update({
+            'answer_text': put_data.get('answer_text'),
+            'mark': put_data.get('mark'),
+            'id_question': put_data.get('id_question')
+        })
         session.commit()
         response_object['message'] = 'Answer successfully updated'
     return jsonify(response_object)
@@ -275,17 +258,16 @@ def exam_update(id_exam):
     session = db_session.create_session()
     response_object = {'status': 'success'}
     put_data = request.get_json()
-    exam = session.query(Exam).filter(Exam.id_exam == id_exam)
+    exam = session.query(Exam).filter(Exam.id_exam == id_exam).first()
     if exam:
-        session.delete(exam)
-        exam = Exam(
-            id_test=put_data.get('id_test'),
-            mark=put_data.get('mark'),
-            answers=put_data.get('answers'),  # TODO
-            id_people=put_data.get('id_people'),
-            date=put_data.get('date')
-        )
-        session.add(exam)
+        exam.update({
+            'id_test': put_data.get('id_test'),
+            'mark': put_data.get('mark'),
+            'answers': put_data.get('answers'),  # TODO
+            'id_people': put_data.get('id_people'),
+            'date': put_data.get('date')
+        })
+
         session.commit()
         response_object['message'] = 'Exam successfully updated'
     return jsonify(response_object)
@@ -315,7 +297,7 @@ def test_delete(id_test):
     return jsonify(response_object)
 
 
-@app.route('/question/<id_question>', methods=['DELETE'])
+@app.route('/questions/<id_question>', methods=['DELETE'])
 def question_delete(id_question):
     session = db_session.create_session()
     response_object = {'status': 'success'}

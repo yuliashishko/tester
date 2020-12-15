@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import Books from './components/Books.vue';
 import People from './components/People'
 import Ping from './components/Ping.vue';
+import Questions from "./components/Questions";
 
 Vue.use(Router);
 
@@ -19,6 +20,11 @@ export default new Router({
       path: '/people',
       name: 'People',
       component: People,
+    },
+    {
+      path: '/questions',
+      name: 'Questions',
+      component: Questions,
     },
     {
       path: '/ping',
