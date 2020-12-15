@@ -3,78 +3,91 @@
     <div class="row">
       <div class="col-sm-10">
         <h1>People</h1>
-        <hr><br><br>
+        <hr>
+        <br><br>
         <alert :message=message v-if="showMessage"></alert>
-        <button type="button" class="btn btn-success btn-sm" v-b-modal.book-modal>Add User</button>
+        <button type="button" class="btn btn-success btn-sm" v-b-modal.people-modal>Add User</button>
         <br><br>
         <table class="table table-hover">
           <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Group</th>
-              <th scope="col">Username</th>
-              <th></th>
-            </tr>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Group</th>
+            <th scope="col">Username</th>
+            <th></th>
+          </tr>
           </thead>
           <tbody>
-            <tr v-for="(book, index) in books" :key="index">
-              <td>{{ book.title }}</td>
-              <td>{{ book.author }}</td>
-              <td>
-                <span v-if="book.read">Yes</span>
-                <span v-else>No</span>
-              </td>
-              <td>
-                <div class="btn-group" role="group">
-                  <button
-                          type="button"
-                          class="btn btn-warning btn-sm"
-                          v-b-modal.book-update-modal
-                          @click="editBook(book)">
-                      Update
-                  </button>
-                  <button
-                          type="button"
-                          class="btn btn-danger btn-sm"
-                          @click="onDeleteBook(book)">
-                      Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
+          <tr v-for="(people, index) in people" :key="index">
+            <td>{{ people.name }}</td>
+            <td>{{ people.group }}</td>
+            <td>{{ people.username }}</td>
+            <td>
+              <div class="btn-group" role="group">
+                <button
+                  type="button"
+                  class="btn btn-warning btn-sm"
+                  v-b-modal.people-update-modal
+                  @click="editPeople(people)">
+                  Update
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  @click="onDeletePeople(people)">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
           </tbody>
         </table>
       </div>
     </div>
-    <b-modal ref="addBookModal"
-            id="book-modal"
-            title="Add a new book"
-            hide-footer>
+    <b-modal ref="addPeopleModal"
+             id="people-modal"
+             title="Add a new user"
+             hide-footer>
       <b-form @submit="onSubmit" @reset="onReset" class="w-100">
-      <b-form-group id="form-title-group"
-                    label="Title:"
-                    label-for="form-title-input">
-          <b-form-input id="form-title-input"
+        <b-form-group id="form-name-group"
+                      label="name:"
+                      label-for="form-nae-input">
+          <b-form-input id="form-name-input"
                         type="text"
-                        v-model="addBookForm.title"
+                        v-model="addPeopleForm.name"
                         required
-                        placeholder="Enter title">
+                        placeholder="Enter name">
           </b-form-input>
         </b-form-group>
-        <b-form-group id="form-author-group"
-                      label="Author:"
-                      label-for="form-author-input">
-            <b-form-input id="form-author-input"
-                          type="text"
-                          v-model="addBookForm.author"
-                          required
-                          placeholder="Enter author">
-            </b-form-input>
-          </b-form-group>
-        <b-form-group id="form-read-group">
-          <b-form-checkbox-group v-model="addBookForm.read" id="form-checks">
-            <b-form-checkbox value="true">Read?</b-form-checkbox>
-          </b-form-checkbox-group>
+        <b-form-group id="form-group-group"
+                      label="Group:"
+                      label-for="form-group-input">
+          <b-form-input id="form-group-input"
+                        type="text"
+                        v-model="addPeopleForm.group"
+                        required
+                        placeholder="Enter group">
+          </b-form-input>
+        </b-form-group>
+        <b-form-group id="form-username-group"
+                         label="Username:"
+                         label-for="form-username-input">
+          <b-form-input id="form-username-input"
+                        type="text"
+                        v-model="addPeopleForm.username"
+                        required
+                        placeholder="Enter username">
+          </b-form-input>
+        </b-form-group>
+        <b-form-group id="form-password-group"
+                         label="Password:"
+                         label-for="form-password-input">
+          <b-form-input id="form-password-input"
+                        type="text"
+                        v-model="addPeopleForm.password"
+                        required
+                        placeholder="Enter password">
+          </b-form-input>
         </b-form-group>
         <b-button-group>
           <b-button type="submit" variant="primary">Submit</b-button>
@@ -82,35 +95,50 @@
         </b-button-group>
       </b-form>
     </b-modal>
-    <b-modal ref="editBookModal"
-            id="book-update-modal"
-            title="Update"
-            hide-footer>
+    <b-modal ref="editPeopleModal"
+             id="people-update-modal"
+             title="Update"
+             hide-footer>
       <b-form @submit="onSubmitUpdate" @reset="onResetUpdate" class="w-100">
-      <b-form-group id="form-title-edit-group"
-                    label="Title:"
-                    label-for="form-title-edit-input">
-          <b-form-input id="form-title-edit-input"
+        <b-form-group id="form-name-edit-group"
+                      label="Name:"
+                      label-for="form-name-edit-input">
+          <b-form-input id="form-name-edit-input"
                         type="text"
-                        v-model="editForm.title"
+                        v-model="editForm.name"
                         required
-                        placeholder="Enter title">
+                        placeholder="Enter name">
           </b-form-input>
         </b-form-group>
-        <b-form-group id="form-author-edit-group"
-                      label="Author:"
-                      label-for="form-author-edit-input">
-            <b-form-input id="form-author-edit-input"
+        <b-form-group id="form-group-edit-group"
+                      label="Group:"
+                      label-for="form-group-edit-input">
+          <b-form-input id="form-group-edit-input"
+                        type="text"
+                        v-model="editForm.group"
+                        required
+                        placeholder="Enter group">
+          </b-form-input>
+        </b-form-group>
+        <b-form-group id="form-username-edit-group"
+                      label="Username:"
+                      label-for="form-username-edit-input">
+          <b-form-input id="form-group-username-input"
+                        type="text"
+                        v-model="editForm.username"
+                        required
+                        placeholder="Enter username">
+          </b-form-input>
+          <b-form-group id="form-password-edit-group"
+                        label="Password:"
+                        label-for="form-password-edit-input">
+            <b-form-input id="form-password-edit-input"
                           type="text"
-                          v-model="editForm.author"
+                          v-model="editForm.password"
                           required
-                          placeholder="Enter author">
+                          placeholder="Enter password">
             </b-form-input>
           </b-form-group>
-        <b-form-group id="form-read-edit-group">
-          <b-form-checkbox-group v-model="editForm.read" id="form-checks">
-            <b-form-checkbox value="true">Read?</b-form-checkbox>
-          </b-form-checkbox-group>
         </b-form-group>
         <b-button-group>
           <b-button type="submit" variant="primary">Update</b-button>
@@ -128,19 +156,22 @@ import Alert from './Alert.vue';
 export default {
   data() {
     return {
-      books: [],
-      addBookForm: {
-        title: '',
-        author: '',
-        read: [],
+      people: [],
+      addPeopleForm: {
+        id_people: '',
+        name: '',
+        group: '',
+        username: '',
+        password: '',
       },
       message: '',
       showMessage: false,
       editForm: {
-        id: '',
-        title: '',
-        author: '',
-        read: [],
+        id_people: '',
+        name: '',
+        group: '',
+        username: '',
+        password: '',
       },
     };
   },
@@ -148,113 +179,114 @@ export default {
     alert: Alert,
   },
   methods: {
-    getBooks() {
-      const path = 'http://localhost:5000/books';
+    getPeople() {
+      const path = 'http://localhost:5000/people';
       axios.get(path)
         .then((res) => {
-          this.books = res.data.books;
+          this.people = res.data.people;
         })
         .catch((error) => {
           // eslint-disable-next-line
           console.error(error);
         });
     },
-    addBook(payload) {
-      const path = 'http://localhost:5000/books';
+    addPeople(payload) {
+      const path = 'http://localhost:5000/people';
       axios.post(path, payload)
         .then(() => {
-          this.getBooks();
-          this.message = 'Book added!';
+          this.getPeople();
+          this.message = 'User added!';
           this.showMessage = true;
         })
         .catch((error) => {
           // eslint-disable-next-line
           console.log(error);
-          this.getBooks();
+          this.getPeople();
         });
     },
     initForm() {
-      this.addBookForm.title = '';
-      this.addBookForm.author = '';
-      this.addBookForm.read = [];
-      this.editForm.id = '';
-      this.editForm.title = '';
-      this.editForm.author = '';
-      this.editForm.read = [];
+      this.addPeopleForm.name = '';
+      this.addPeopleForm.group = '';
+      this.addPeopleForm.username = [];
+      this.addPeopleForm.password = [];
+      this.editForm.id_people = '';
+      this.editForm.name = '';
+      this.editForm.group = '';
+      this.editForm.username = '';
+      this.editForm.password = [];
     },
     onSubmit(evt) {
       evt.preventDefault();
-      this.$refs.addBookModal.hide();
-      let read = false;
-      if (this.addBookForm.read[0]) read = true;
+      this.$refs.addPeopleModal.hide();
       const payload = {
-        title: this.addBookForm.title,
-        author: this.addBookForm.author,
-        read, // property shorthand
+        name: this.addPeopleForm.name,
+        group: this.addPeopleForm.group,
+        username: this.addPeopleForm.username,
+        password: this.addPeopleForm.password, // property shorthand
       };
-      this.addBook(payload);
+      this.addPeople(payload);
       this.initForm();
     },
     onReset(evt) {
       evt.preventDefault();
-      this.$refs.addBookModal.hide();
+      this.$refs.addPeopleModal.hide();
       this.initForm();
     },
-    editBook(book) {
-      this.editForm = book;
+    editPeople(people) {
+      this.editForm = people;
+      this.editForm.password = '';
     },
     onSubmitUpdate(evt) {
       evt.preventDefault();
-      this.$refs.editBookModal.hide();
-      let read = false;
-      if (this.editForm.read[0]) read = true;
+      this.$refs.editPeopleModal.hide();
       const payload = {
-        title: this.editForm.title,
-        author: this.editForm.author,
-        read,
+        name: this.editForm.name,
+        group: this.editForm.group,
+        username: this.editForm.username,
+        password: this.editForm.password,
       };
-      this.updateBook(payload, this.editForm.id);
+      this.updatePeople(payload, this.editForm.id_people);
     },
-    updateBook(payload, bookID) {
-      const path = `http://localhost:5000/books/${bookID}`;
+    updatePeople(payload, id_people) {
+      const path = `http://localhost:5000/people/${id_people}`;
       axios.put(path, payload)
         .then(() => {
-          this.getBooks();
-          this.message = 'Book updated!';
+          this.getPeople();
+          this.message = 'User updated!';
           this.showMessage = true;
         })
         .catch((error) => {
           // eslint-disable-next-line
           console.error(error);
-          this.getBooks();
+          this.getPeople();
         });
     },
     onResetUpdate(evt) {
       evt.preventDefault();
-      this.$refs.editBookModal.hide();
+      this.$refs.editPeopleModal.hide();
       this.initForm();
-      this.getBooks(); // why?
+      this.getPeople(); // why?
     },
-    removeBook(bookID) {
-      const path = `http://localhost:5000/books/${bookID}`;
+    removePeople(id_people) {
+      const path = `http://localhost:5000/people/${id_people}`;
       axios.delete(path)
         .then(() => {
-          this.getBooks();
-          this.message = 'Book removed!';
+          this.getPeople();
+          this.message = 'User removed!';
           this.showMessage = true;
         })
         .catch((error) => {
           // eslint-disable-next-line
           console.error(error);
-          this.getBooks();
+          this.getPeople();
         });
     },
-    onDeleteBook(book) {
-      this.removeBook(book.id);
+    onDeletePeople(people) {
+      this.removePeople(people.id_people);
     },
   },
   created() {
-    this.getBooks();
+    this.getPeople();
   },
 };
 </script>
