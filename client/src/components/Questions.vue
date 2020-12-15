@@ -116,6 +116,8 @@
 <script>
 import axios from 'axios';
 import Alert from './Alert.vue';
+import Vue from "vue";
+
 
 export default {
   data() {
@@ -240,6 +242,7 @@ export default {
       this.removePeople(question.id_question);
     },
     showAnswers(question) {
+        Vue.$cookies.set('id_question', question.id_question)
         this.$router.push({name: 'Answers'})
     }
   },

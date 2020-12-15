@@ -72,6 +72,8 @@ def answer_get():
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
+
+
 @app.route('/exam', methods=['GET'])
 def exam_get():
     session = db_session.create_session()

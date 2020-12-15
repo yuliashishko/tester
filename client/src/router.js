@@ -4,7 +4,7 @@ import Books from './components/Books.vue';
 import People from './components/People'
 import Ping from './components/Ping.vue';
 import Questions from "./components/Questions";
-
+import VueCookies from 'vue-cookies'
 Vue.use(Router);
 
 export default new Router({
