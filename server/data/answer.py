@@ -12,9 +12,6 @@ class Answer(SqlAlchemyBase):
     mark = sqlalchemy.Column(sqlalchemy.Integer)
     answer_text = sqlalchemy.Column(sqlalchemy.String)
 
-    id_test = sqlalchemy.Column(sqlalchemy.Integer,
-                                sqlalchemy.ForeignKey("test.id_test"))
-
     id_question = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("question.id_question"))
     question = orm.relation('Question')

@@ -64,11 +64,11 @@ def question_get():
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
-@app.route('/answer', methods=['GET'])
-def answer_get():
+@app.route('/answer/<id_question>', methods=['GET'])
+def answer_get(id_question):
     session = db_session.create_session()
     response_object = {'status': 'success'}
-    response_object['answer'] = session.query(Answer).all()
+    response_object['answer'] = session.query(Answer).filter(Answer.id_question == id_question).all()
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 

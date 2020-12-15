@@ -123,19 +123,19 @@ export default {
   data() {
     return {
       questions: [],
-      addQuestionForm: {
+      addAnswerForm: {
+        id_answer: '',
+        mark: 0,
+        answer_text: '',
         id_question: '',
-        max_mark: 0,
-        question_text: '',
-        answers: [],
       },
       message: '',
       showMessage: false,
       editForm: {
+        id_answer: '',
+        mark: 0,
+        answer_text: '',
         id_question: '',
-        max_mark: 0,
-        question_text: '',
-        answers: [],
       },
     };
   },
@@ -143,103 +143,104 @@ export default {
     alert: Alert,
   },
   methods: {
-    getQuestions() {
-      const path = 'http://localhost:5000/questions';
+    getAnswers() {
+      const curr_question_id = Vue.$cookies.get('id_question');
+      const path = `http://localhost:5000/answers/${curr_question_id}`;
       axios.get(path)
         .then((res) => {
-          this.questions = res.data.questions;
+          this.answers = res.data.answers;
         })
         .catch((error) => {
           // eslint-disable-next-line
           console.error(error);
         });
     },
-    addQuestion(payload) {
-      const path = 'http://localhost:5000/questions';
+    addAnswer(payload) {
+      const curr_question_id = Vue.$cookies.get('id_question');
+      const path = `http://localhost:5000/answers/${curr_question_id}`;
       axios.post(path, payload)
         .then(() => {
-          this.getQuestions();
-          this.message = 'Question added!';
+          this.getAnswers();
+          this.message = 'Answer added!';
           this.showMessage = true;
         })
         .catch((error) => {
           // eslint-disable-next-line
           console.log(error);
-          this.getQuestions();
+          this.getAnswers();
         });
     },
     initForm() {
-      this.addQuestionForm.question_text = '';
-      this.addQuestionForm.max_mark = 0;
-      this.addQuestionForm.answers = [];
+      this.addAnswerForm.answer_text = '';
+      this.addAnswerForm.mark = 0;
+      this.editForm.id_answer = '';
+      this.editForm.mark = 0;
+      this.editForm.answer_text = '';
       this.editForm.id_question = '';
-      this.editForm.question_text = '';
-      this.editForm.max_mark = 0;
-      this.editForm.answers = [];
     },
     onSubmit(evt) {
       evt.preventDefault();
-      this.$refs.addQuestionModal.hide();
+      this.$refs.addAnswerModal.hide();
       const payload = {
-        max_mark: this.addQuestionForm.max_mark,
-        question_text: this.addQuestionForm.question_text,
-        answers: this.addQuestionForm.answers,
+        mark: this.addAnswerForm.mark,
+        answer_text: this.addAnswerForm.answer_text,
+        id_question: Vue.$cookies.get('id_question'),
       };
-      this.addQuestion(payload);
+      this.addAnswer(payload);
       this.initForm();
     },
     onReset(evt) {
       evt.preventDefault();
-      this.$refs.addQuestionModal.hide();
+      this.$refs.addAnswerModal.hide();
       this.initForm();
     },
-    editQuestion(question) {
-      this.editForm = question;
+    editAnswer(answer) {
+      this.editForm = answer;
     },
     onSubmitUpdate(evt) {
       evt.preventDefault();
-      this.$refs.editQuestionModal.hide();
+      this.$refs.editAnswerModal.hide();
       const payload = {
-        question_text: this.editForm.question_text,
-        max_mark: this.editForm.max_mark,
-        answers: this.editForm.answers,
+        mark: this.editForm.mark,
+        answer_text: this.editForm.answer_text,
+        id_question: Vue.$cookies.get('id_question'),
       };
-      this.updateQuestion(payload, this.editForm.id_question);
+      this.updateAnswer(payload, this.editForm.id_answer);
     },
-    updateQuestion(payload, id_question) {
-      const path = `http://localhost:5000/questions/${id_question}`;
+    updateAnswer(payload, id_answer) {
+      const path = `http://localhost:5000/answers/${id_answer}`;
       axios.put(path, payload)
         .then(() => {
-          this.getQuestions();
-          this.message = 'Question updated!';
+          this.getAnswers();
+          this.message = 'Answer updated!';
           this.showMessage = true;
         })
         .catch((error) => {
           console.error(error);
-          this.getQuestions();
+          this.getAnswers();
         });
     },
     onResetUpdate(evt) {
       evt.preventDefault();
-      this.$refs.editQuestionModal.hide();
+      this.$refs.editAnswerModal.hide();
       this.initForm();
-      this.getQuestions();
+      this.getAnswers();
     },
-    removeQuestion(id_question) {
-      const path = `http://localhost:5000/questions/${id_question}`;
+    removeAnswer(id_answer) {
+      const path = `http://localhost:5000/questions/${id_answer}`;
       axios.delete(path)
         .then(() => {
-          this.getQuestions();
-          this.message = 'Question removed!';
+          this.getAnswers();
+          this.message = 'Answer removed!';
           this.showMessage = true;
         })
         .catch((error) => {
           console.error(error);
-          this.getQuestions();
+          this.getAnswers();
         });
     },
-    onDeleteQuestion(question) {
-      this.removeQuestion(question.id_question);
+    onDeleteAnswer(answer) {
+      this.removeAnswer(answer.id_answer);
     },
     showAnswers(question) {
         Vue.$cookies.set('id_question', question.id_question)
