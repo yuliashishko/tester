@@ -2,44 +2,38 @@
   <div class="container">
     <div class="row">
       <div class="col-sm-10">
-        <h1>Questions</h1>
+        <h1>Answers</h1>
         <hr>
         <br><br>
         <alert :message=message v-if="showMessage"></alert>
-        <button type="button" class="btn btn-success btn-sm" v-b-modal.question-modal>Add question</button>
+        <button type="button" class="btn btn-success btn-sm" v-b-modal.answer-modal>Add answer</button>
         <br><br>
         <table class="table table-hover">
             <thead>
               <tr>
-                <th scope="col">Question text</th>
-                <th scope="col">Maximum mark</th>
+                <th scope="col">Answer text</th>
+                <th scope="col">mark</th>
                 <th></th>
               </tr>
             </thead>
           <tbody>
-          <tr v-for="(question, index) in questions" :key="index">
-            <td>{{question.question_text }}</td>
-            <td>{{question.max_mark }}</td>
+          <tr v-for="(answer, index) in answers" :key="index">
+            <td>{{answer.answer_text }}</td>
+            <td>{{answer.mark }}</td>
             <td>
               <div class="btn-group" role="group">
                 <button
                   type="button"
                   class="btn btn-warning btn-sm"
-                  v-b-modal.question-update-modal
-                  @click="editQuestion(question)">
+                  v-b-modal.answer-update-modal
+                  @click="editAnswer(answer)">
                   Update
                 </button>
                 <button
                   type="button"
                   class="btn btn-danger btn-sm"
-                  @click="onDeleteQuestion(question)">
+                  @click="onDeleteAnswer(answer)">
                   Delete
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-danger btn-sm"
-                  @click="showAnswers(question)">
-                  Answers
                 </button>
               </div>
             </td>
@@ -48,9 +42,9 @@
         </table>
       </div>
     </div>
-    <b-modal ref="addQuestionModal"
-             id="question-modal"
-             title="Add a new question"
+    <b-modal ref="addAnswerModal"
+             id="answer-modal"
+             title="Add a new answer"
              hide-footer>
       <b-form @submit="onSubmit" @reset="onReset" class="w-100">
         <b-form-group id="form-text-group"
@@ -58,19 +52,19 @@
                       label-for="form-name-input">
           <b-form-input id="form-text-input"
                         type="text"
-                        v-model="addQuestionForm.question_text"
+                        v-model="addAnswerForm.answer_text"
                         required
-                        placeholder="Enter question text">
+                        placeholder="Enter answer text">
           </b-form-input>
         </b-form-group>
         <b-form-group id="form-mark-group"
-                      label="Maximum mark:"
+                      label="mark:"
                       label-for="form-mark-input">
           <b-form-input id="form-mark-input"
                         type="text"
-                        v-model="addQuestionForm.max_mark"
+                        v-model="addAnswerForm.mark"
                         required
-                        placeholder="Enter maximum mark">
+                        placeholder="Enter mark">
           </b-form-input>
         </b-form-group>
         <b-button-group>
@@ -79,29 +73,29 @@
         </b-button-group>
       </b-form>
     </b-modal>
-    <b-modal ref="editQuestionModal"
-             id="question-update-modal"
+    <b-modal ref="editAnswerModal"
+             id="answer-update-modal"
              title="Update"
              hide-footer>
       <b-form @submit="onSubmitUpdate" @reset="onResetUpdate" class="w-100">
         <b-form-group id="form-text-edit-group"
-                      label="Question text:"
+                      label="answer text:"
                       label-for="form-name-edit-input">
           <b-form-input id="form-text-edit-input"
                         type="text"
-                        v-model="editForm.question_text"
+                        v-model="editForm.answer_text"
                         required
-                        placeholder="Enter Question text">
+                        placeholder="Enter answer text">
           </b-form-input>
         </b-form-group>
         <b-form-group id="form-mark-edit-group"
-                      label="Maximum mark:"
+                      label="mark:"
                       label-for="form-mark-edit-input">
           <b-form-input id="form-mark-edit-input"
                         type="text"
-                        v-model="editForm.max_mark"
+                        v-model="editForm.mark"
                         required
-                        placeholder="Enter maximum mark">
+                        placeholder="Enter mark">
           </b-form-input>
         </b-form-group>
         <b-button-group>
@@ -122,7 +116,7 @@ import Vue from "vue";
 export default {
   data() {
     return {
-      questions: [],
+      answers: [],
       addAnswerForm: {
         id_answer: '',
         mark: 0,
@@ -148,7 +142,7 @@ export default {
       const path = `http://localhost:5000/answers/${curr_question_id}`;
       axios.get(path)
         .then((res) => {
-          this.answers = res.data.answers;
+          this.answers = res.data.answer;
         })
         .catch((error) => {
           // eslint-disable-next-line
@@ -227,7 +221,7 @@ export default {
       this.getAnswers();
     },
     removeAnswer(id_answer) {
-      const path = `http://localhost:5000/questions/${id_answer}`;
+      const path = `http://localhost:5000/answers/${id_answer}`;
       axios.delete(path)
         .then(() => {
           this.getAnswers();
@@ -242,13 +236,9 @@ export default {
     onDeleteAnswer(answer) {
       this.removeAnswer(answer.id_answer);
     },
-    showAnswers(question) {
-        Vue.$cookies.set('id_question', question.id_question)
-        this.$router.push({name: 'Answers'})
-    }
   },
   created() {
-    this.getQuestions();
+    this.getAnswers();
   },
 };
 </script>

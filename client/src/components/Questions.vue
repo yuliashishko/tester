@@ -37,7 +37,7 @@
                 </button>
                 <button
                   type="button"
-                  class="btn btn-danger btn-sm"
+                  class="btn btn-warning btn-sm"
                   @click="showAnswers(question)">
                   Answers
                 </button>

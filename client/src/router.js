@@ -5,6 +5,7 @@ import People from './components/People'
 import Ping from './components/Ping.vue';
 import Questions from "./components/Questions";
 import VueCookies from 'vue-cookies'
+import Answers from "./components/Answers";
 Vue.use(Router);
 
 export default new Router({
@@ -25,6 +26,11 @@ export default new Router({
       path: '/questions',
       name: 'Questions',
       component: Questions,
+    },
+    {
+      path: '/answers',
+      name: 'Answers',
+      component: Answers,
     },
     {
       path: '/ping',

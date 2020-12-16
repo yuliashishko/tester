@@ -48,7 +48,7 @@ def people_get():
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
-@app.route('/test', methods=['GET'])
+@app.route('/tests', methods=['GET'])
 def test_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
@@ -64,7 +64,7 @@ def question_get():
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
-@app.route('/answer/<id_question>', methods=['GET'])
+@app.route('/answers/<id_question>', methods=['GET'])
 def answer_get(id_question):
     session = db_session.create_session()
     response_object = {'status': 'success'}
@@ -74,7 +74,7 @@ def answer_get(id_question):
 
 
 
-@app.route('/exam', methods=['GET'])
+@app.route('/exams', methods=['GET'])
 def exam_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
@@ -102,7 +102,7 @@ def people_post():
     return json.dumps(response_object, cls=AlchemyEncoder)
 
 
-@app.route('/test', methods=['POST'])
+@app.route('/tests', methods=['POST'])
 def test_post():
     session = db_session.create_session()
     post_data = request.get_json()
@@ -143,8 +143,8 @@ def question_post():
     return jsonify(response_object)
 
 
-@app.route('/answer', methods=['POST'])
-def answer_post():
+@app.route('/answers/<id_question>', methods=['POST'])
+def answer_post(id_question):
     session = db_session.create_session()
     post_data = request.get_json()
     response_object = {'status': 'success'}
@@ -153,7 +153,7 @@ def answer_post():
         answer = Answer(
             mark=post_data.get('mark'),
             answer_text=post_data.get('answer_text'),
-            id_question=post_data.get('id_question')  # TODO: check id_test
+            id_question=id_question
         )
 
         session.add(answer)
@@ -164,7 +164,7 @@ def answer_post():
     return jsonify(response_object)
 
 
-@app.route('/exam', methods=['POST'])
+@app.route('/exams', methods=['POST'])
 def exam_post():
     session = db_session.create_session()
     post_data = request.get_json()
@@ -204,7 +204,7 @@ def people_update(id_people):
     return jsonify(response_object)
 
 
-@app.route('/test/<id_test>', methods=['PUT'])
+@app.route('/tests/<id_test>', methods=['PUT'])
 def test_update(id_test):
     session = db_session.create_session()
     response_object = {'status': 'success'}
@@ -238,14 +238,14 @@ def question_update(id_question):
     return jsonify(response_object)
 
 
-@app.route('/answer/<id_answer>', methods=['PUT'])
+@app.route('/answers/<id_answer>', methods=['PUT'])
 def answer_update(id_answer):
     session = db_session.create_session()
     response_object = {'status': 'success'}
     put_data = request.get_json()
     answer = session.query(Answer).filter(Answer.id_answer == id_answer).first()
     if answer:
-        answer.update({
+        session.query(Answer).filter(Answer.id_answer == id_answer).update({
             'answer_text': put_data.get('answer_text'),
             'mark': put_data.get('mark'),
             'id_question': put_data.get('id_question')
@@ -255,7 +255,7 @@ def answer_update(id_answer):
     return jsonify(response_object)
 
 
-@app.route('/exam/<id_exam>', methods=['PUT'])
+@app.route('/exams/<id_exam>', methods=['PUT'])
 def exam_update(id_exam):
     session = db_session.create_session()
     response_object = {'status': 'success'}
@@ -287,7 +287,7 @@ def people_delete(id_people):
     return jsonify(response_object)
 
 
-@app.route('/test/<id_test>', methods=['DELETE'])
+@app.route('/tests/<id_test>', methods=['DELETE'])
 def test_delete(id_test):
     session = db_session.create_session()
     response_object = {'status': 'success'}
@@ -311,7 +311,7 @@ def question_delete(id_question):
     return jsonify(response_object)
 
 
-@app.route('/answer/<id_answer>', methods=['DELETE'])
+@app.route('/answers/<id_answer>', methods=['DELETE'])
 def answer_delete(id_answer):
     session = db_session.create_session()
     response_object = {'status': 'success'}
@@ -323,7 +323,7 @@ def answer_delete(id_answer):
     return jsonify(response_object)
 
 
-@app.route('/exam/<id_exam>', methods=['DELETE'])
+@app.route('/exams/<id_exam>', methods=['DELETE'])
 def exam_delete(id_exam):
     session = db_session.create_session()
     response_object = {'status': 'success'}
