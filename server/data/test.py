@@ -17,6 +17,7 @@ class Test(SqlAlchemyBase):
                                 primary_key=True, autoincrement=True)
     max_mark = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
     duration = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
+    test_name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     questions = orm.relation("Question",
                              secondary="test_question")
     exams = orm.relation("Exam", back_populates='test')

@@ -55,6 +55,15 @@ def test_get():
     response_object['test'] = session.query(Test).all()
     return json.dumps(response_object, cls=AlchemyEncoder)
 
+@app.route('/tests/<id_test>', methods=['GET'])
+def get_questions_test(id_test):
+    session = db_session.create_session()
+    response_object = {'status': 'success'}
+    test = session.query(Test).filter(Test.id_test == id_test).first()
+    response_object['questions'] = test.questions
+    response_object['another_questions'] = session.query(Question).filter(Question not in test.questions).all()
+    return json.dumps(response_object, cls=AlchemyEncoder)
+
 
 @app.route('/questions', methods=['GET'])
 def question_get():
