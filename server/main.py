@@ -5,7 +5,10 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash
-
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
 from server.data import db_session
 from server.data.answer import Answer
 from server.data.exam import Exam
@@ -19,10 +22,34 @@ CORS(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+jwt = JWTManager(app)
+from sqlalchemy.ext.declarative import DeclarativeMeta
 
 
-class AlchemyEncoder(json.JSONEncoder):
+def new_alchemy_encoder():
+    _visited_objs = []
 
+    class AlchemyEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj.__class__, DeclarativeMeta):
+                # don't re-visit self
+                if obj in _visited_objs:
+                    return None
+                _visited_objs.append(obj)
+
+                # an SQLAlchemy class
+                fields = {}
+                for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
+                    fields[field] = obj.__getattribute__(field)
+                # a json-encodable dict
+                return fields
+
+            return json.JSONEncoder.default(self, obj)
+
+    return AlchemyEncoder
+
+
+class EasyAlchemyEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj.__class__, DeclarativeMeta):
             # an SQLAlchemy class
@@ -30,13 +57,16 @@ class AlchemyEncoder(json.JSONEncoder):
             for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
                 data = obj.__getattribute__(field)
                 try:
-                    json.dumps(data)
+                    json.dumps(data)  # this will fail on non-encodable values, like other classes
                     fields[field] = data
                 except TypeError:
                     fields[field] = None
+            # a json-encodable dict
             return fields
-
         return json.JSONEncoder.default(self, obj)
+
+
+AlchemyEncoder = new_alchemy_encoder()
 
 
 @app.route('/people', methods=['GET'])
@@ -45,15 +75,17 @@ def people_get():
     response_object = {'status': 'success'}
     response_object['people'] = session.query(People).all()
     # return jsonify(response_object)
-    return json.dumps(response_object, cls=AlchemyEncoder)
+    return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
 
 
 @app.route('/tests', methods=['GET'])
+@jwt_required
 def test_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
-    response_object['test'] = session.query(Test).all()
-    return json.dumps(response_object, cls=AlchemyEncoder)
+    response_object['tests'] = session.query(Test).all()
+    return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+
 
 @app.route('/tests/<id_test>', methods=['GET'])
 def get_questions_test(id_test):
@@ -61,8 +93,9 @@ def get_questions_test(id_test):
     response_object = {'status': 'success'}
     test = session.query(Test).filter(Test.id_test == id_test).first()
     response_object['questions'] = test.questions
-    response_object['another_questions'] = session.query(Question).filter(Question not in test.questions).all()
-    return json.dumps(response_object, cls=AlchemyEncoder)
+    ids = [i.id_question for i in test.questions]
+    response_object['another_questions'] = session.query(Question).filter(Question.id_question.notin_(ids)).all()
+    return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
 
 
 @app.route('/questions', methods=['GET'])
@@ -70,7 +103,7 @@ def question_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
     response_object['questions'] = session.query(Question).all()
-    return json.dumps(response_object, cls=AlchemyEncoder)
+    return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
 
 
 @app.route('/answers/<id_question>', methods=['GET'])
@@ -78,17 +111,57 @@ def answer_get(id_question):
     session = db_session.create_session()
     response_object = {'status': 'success'}
     response_object['answer'] = session.query(Answer).filter(Answer.id_question == id_question).all()
-    return json.dumps(response_object, cls=AlchemyEncoder)
-
-
+    ret = json.dumps(response_object, cls=EasyAlchemyEncoder)
+    return ret
 
 
 @app.route('/exams', methods=['GET'])
+@jwt_required
 def exam_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
     response_object['exam'] = session.query(Exam).all()
-    return json.dumps(response_object, cls=AlchemyEncoder)
+    return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+
+
+@app.route('/register/', methods=('POST',))
+def register():
+    session = db_session.create_session()
+    response_object = {'status': 'success'}
+    post_data = request.get_json()
+    people = session.query(People).filter(People.username == post_data.get('username')).first()
+    if not people:
+        people = People(
+            name=post_data['name'],
+            group=post_data['group'],
+            username=post_data['username']
+        )
+        people.set_password(post_data['password'])
+        session.add(people)
+        session.commit()
+        response_object['message'] = 'Registration complete'
+    else:
+        response_object['message'] = 'Such username already exist. Try another one'
+    return jsonify(response_object)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    session = db_session.create_session()
+    response_object = {'status': 'success'}
+    post_data = request.get_json()
+    user = session.query(People).filter(People.username == post_data['username']).first()
+    if user and user.check_password(post_data['password']):
+        response_object['message'] = 'Login successfully'
+        access_token = create_access_token(identity=user.username)
+        response_object['token'] = access_token
+    else:
+        response_object['message'] = 'Uncorrect username/password'
+        response_object['status'] = 'false'
+    return jsonify(response_object)
+
+
+
 
 
 @app.route('/people', methods=['POST'])
@@ -120,7 +193,8 @@ def test_post():
     if not tests:
         test = Test(
             max_mark=post_data.get('max_mark'),
-            duration=post_data.get('duration')
+            duration=post_data.get('duration'),
+            test_name=post_data.get('test_name')
         )
 
         session.add(test)
@@ -220,11 +294,16 @@ def test_update(id_test):
     put_data = request.get_json()
     test = session.query(Test).filter(Test.id_test == id_test).first()
     if test:
-        test.update({
-            'max_mark': put_data.get('max_mark'),
-            'duration': put_data.get('duration'),
-            'questions': put_data.get('questions')
-        })
+        if put_data.get('max_mark'):
+            session.query(Test).filter(Test.id_test == id_test).update({
+                'max_mark': put_data.get('max_mark'),
+                'duration': put_data.get('duration'),
+                'test_name': put_data.get('test_name')
+            })
+        if put_data.get('questions'):
+            for i in put_data['questions']:
+                test.questions.append(session.query(Question).filter(Question.id_question == i['id_question']).first())
+
         session.commit()
         response_object['message'] = 'Test successfully updated'
     return jsonify(response_object)
@@ -239,9 +318,11 @@ def question_update(id_question):
     if question:
         session.query(Question).filter(Question.id_question == id_question).update({
             'question_text': put_data.get('question_text'),
-            'max_mark': put_data.get('max_mark'),
-            'answers': put_data.get('answers')
+            'max_mark': put_data.get('max_mark')
         })
+        if put_data.get('answers'):
+            for i in put_data['answers']:
+                question.answers.append(session.query(Answer).filter(Answer.id_answer == i['id_answer']).first())
         session.commit()
         response_object['message'] = 'Question successfully updated'
     return jsonify(response_object)
@@ -350,11 +431,3 @@ def main():
 
 
 main()
-# people = People(
-#     name='name',
-#     group='group',
-#     id_people='id',
-#     username='username',
-#     password='password'
-# )
-# print(json.dumps(people, cls=AlchemyEncoder))

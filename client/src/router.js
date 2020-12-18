@@ -6,6 +6,11 @@ import Ping from './components/Ping.vue';
 import Questions from "./components/Questions";
 import VueCookies from 'vue-cookies'
 import Answers from "./components/Answers";
+import Tests from "./components/Tests";
+import LoginComponent from "./components/Login";
+import Registration from "./components/Registration";
+import SecureComponent from "./components/Secure";
+
 Vue.use(Router);
 
 export default new Router({
@@ -31,6 +36,26 @@ export default new Router({
       path: '/answers',
       name: 'Answers',
       component: Answers,
+    },
+    {
+      path: '/tests',
+      name: 'Tests',
+      component: Tests,
+    },
+    {
+      path: "/login",
+      name: "login",
+      component: LoginComponent
+    },
+    {
+      path: "/secure",
+      name: "secure",
+      component: SecureComponent
+    },
+    {
+      path: '/registration',
+      name: 'Registration',
+      component: Registration,
     },
     {
       path: '/ping',

@@ -9,19 +9,19 @@
         <button type="button" class="btn btn-success btn-sm" v-b-modal.test-modal>Add test</button>
         <br><br>
         <table class="table table-hover">
-            <thead>
-              <tr>
-                <th scope="col">Test name</th>
-                <th scope="col">Maximum mark</th>
-                <th scope="col">Duration</th>
-                <th></th>
-              </tr>
-            </thead>
+          <thead>
+          <tr>
+            <th scope="col">Test name</th>
+            <th scope="col">Maximum mark</th>
+            <th scope="col">Duration</th>
+            <th></th>
+          </tr>
+          </thead>
           <tbody>
           <tr v-for="(test, index) in tests" :key="index">
-            <td>{{test.test_name }}</td>
-            <td>{{test.max_mark }}</td>
-            <td>{{test.duration }}</td>
+            <td>{{ test.test_name }}</td>
+            <td>{{ test.max_mark }}</td>
+            <td>{{ test.duration }}</td>
             <td>
               <div class="btn-group" role="group">
                 <button
@@ -40,6 +40,7 @@
                 <button
                   type="button"
                   class="btn btn-warning btn-sm"
+                  v-b-modal.test-questions-update-modal
                   @click="editQuestions(test)">
                   Questions
                 </button>
@@ -139,6 +140,27 @@
              hide-footer>
       <b-form @submit="onSubmitUpdateQuestions" @reset="onResetUpdateQuestions" class="w-100">
 
+          <b-form-group id="form-questions-available-edit-group"
+                      label="Available questions:">
+          <b-select v-model="questions" multiple>
+
+            <option v-for="(question, index) in editQuestionsForm.another_questions" v-bind:value="question">
+              {{ question.question_text }}
+            </option>
+
+          </b-select>
+        </b-form-group>
+          <b-form-group id="form-questions-current-edit-group"
+                      label="Current questions:">
+          <b-select multiple>
+
+            <option v-for="(question, index) in editQuestionsForm.questions" v-bind:value="question">
+              {{ question.question_text }}
+            </option>
+
+          </b-select>
+        </b-form-group>
+
         <b-button-group>
           <b-button type="submit" variant="primary">Update</b-button>
           <b-button type="reset" variant="danger">Cancel</b-button>
@@ -153,18 +175,21 @@
 <script>
 import axios from 'axios';
 import Alert from './Alert.vue';
-
+import Vue from "vue";
 
 
 export default {
   data() {
     return {
+      id_test: '',
       tests: [],
+      questions: [],
       addTestForm: {
         max_mark: 0,
         duration: 0,
         test_name: '',
         questions: [],
+        exams: [],
       },
       message: '',
       showMessage: false,
@@ -174,8 +199,10 @@ export default {
         duration: 0,
         test_name: '',
         questions: [],
+        exams: [],
       },
       editQuestionsForm: {
+        id_test: '',
         questions: [],
         another_questions: [],
       }
@@ -187,7 +214,9 @@ export default {
   methods: {
     getTests() {
       const path = 'http://localhost:5000/tests';
-      axios.get(path)
+      axios.get(path, {
+        headers: {Authorization: "Bearer " + Vue.$cookies.get('token')}
+      })
         .then((res) => {
           this.tests = res.data.tests;
         })
@@ -198,6 +227,7 @@ export default {
     },
     editQuestions(test) {
       const path = `http://localhost:5000/tests/${test.id_test}`;
+      this.id_test = test.id_test;
       axios.get(path)
         .then((res) => {
           this.editQuestionsForm.questions = res.data.questions;
@@ -231,6 +261,9 @@ export default {
       this.editForm.duration = 0;
       this.editForm.test_name = '';
       this.editForm.questions = [];
+      this.editQuestionsForm.questions = [];
+      this.editQuestionsForm.id_test = '';
+      this.editQuestionsForm.another_questions = [];
     },
     onSubmit(evt) {
       evt.preventDefault();
@@ -267,7 +300,12 @@ export default {
       this.updateTest(payload, this.editForm.id_test);
     },
     onSubmitUpdateQuestions(evt) {
-
+      evt.preventDefault();
+      this.$refs.editQuestionsTestModal.hide();
+      const payload = {
+        questions: this.questions,
+      };
+      this.updateTest(payload, this.id_test);
     },
     updateTest(payload, id_test) {
       const path = `http://localhost:5000/tests/${id_test}`;
