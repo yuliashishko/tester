@@ -7,9 +7,10 @@ import Questions from "./components/Questions";
 import VueCookies from 'vue-cookies'
 import Answers from "./components/Answers";
 import Tests from "./components/Tests";
-import LoginComponent from "./components/Login";
+import Login from "./components/Login";
 import Registration from "./components/Registration";
-import SecureComponent from "./components/Secure";
+import Main from "./components/Main";
+import TestExam from "./components/TestExam";
 
 Vue.use(Router);
 
@@ -17,11 +18,6 @@ export default new Router({
   mode: 'history',
   base: process.env.BASE_URL,
   routes: [
-    {
-      path: '/',
-      name: 'Books',
-      component: Books,
-    },
     {
       path: '/people',
       name: 'People',
@@ -33,9 +29,19 @@ export default new Router({
       component: Questions,
     },
     {
+      path: '/',
+      name: 'Main',
+      component: Main,
+    },
+    {
       path: '/answers',
       name: 'Answers',
       component: Answers,
+    },
+    {
+      path: '/findtest',
+      name: 'TestExam',
+      component: TestExam,
     },
     {
       path: '/tests',
@@ -44,13 +50,8 @@ export default new Router({
     },
     {
       path: "/login",
-      name: "login",
-      component: LoginComponent
-    },
-    {
-      path: "/secure",
-      name: "secure",
-      component: SecureComponent
+      name: "Login",
+      component: Login
     },
     {
       path: '/registration',

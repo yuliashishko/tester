@@ -18,15 +18,16 @@
 </template>
 
 <script>
-import axios from "axios";
+import axios from 'axios';
+import Alert from './Alert.vue';
 import Vue from "vue";
 
 export default {
-  showMessage: false,
-  message: '',
-  status: '',
   data() {
     return {
+      showMessage: false,
+      message: '',
+      status: '',
       inputForm: {
         name: "",
         group: "",
@@ -34,6 +35,9 @@ export default {
         password: ""
       }
     }
+  },
+  components: {
+    alert: Alert,
   },
   methods: {
     register() {
@@ -47,6 +51,10 @@ export default {
         this.checkRegister(payload);
       }
     },
+    initForm() {
+      this.showMessage = false;
+      this.message = '';
+    },
     checkRegister(payload) {
       const path = 'http://localhost:5000/registration';
       axios.post(path, payload)
@@ -54,9 +62,9 @@ export default {
           if (res.data.status === false) {
             this.message = res.data.message;
             this.showMessage = true;
-            this.$router.push({name: 'Registration'})
           } else {
-            Vue.$cookies.set('token', res.data.token)
+            this.message = "Registration complete!";
+            this.showMessage = true;
             this.$router.push({name: 'Login'})
           }
         })
@@ -66,6 +74,9 @@ export default {
         });
     },
 
-  }
+  },
+  created() {
+    this.initForm();
+  },
 }
 </script>

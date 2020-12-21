@@ -1,7 +1,10 @@
 import datetime
+import time
 
+import sqlalchemy
 from flask import Flask, render_template, request, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from sqlalchemy import func
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash
@@ -9,6 +12,8 @@ from flask_jwt_extended import (
     JWTManager, jwt_required, create_access_token,
     get_jwt_identity
 )
+
+import server
 from server.data import db_session
 from server.data.answer import Answer
 from server.data.exam import Exam
@@ -31,7 +36,10 @@ def new_alchemy_encoder():
 
     class AlchemyEncoder(json.JSONEncoder):
         def default(self, obj):
-            if isinstance(obj.__class__, DeclarativeMeta):
+            if type(obj) == datetime.date:
+                return obj.isoformat()
+
+            elif isinstance(obj.__class__, DeclarativeMeta):
                 # don't re-visit self
                 if obj in _visited_objs:
                     return None
@@ -39,15 +47,62 @@ def new_alchemy_encoder():
 
                 # an SQLAlchemy class
                 fields = {}
-                for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
-                    fields[field] = obj.__getattribute__(field)
+                # for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata' and not callable()]:
+                for field in dir(obj):
+                    if not field.startswith('_') and field != 'metadata' and not callable(getattr(obj, field)):
+                        fields[field] = obj.__getattribute__(field)
+
                 # a json-encodable dict
                 return fields
+
 
             return json.JSONEncoder.default(self, obj)
 
     return AlchemyEncoder
 
+
+def nested_jsonifier(allowlist, blocklist):
+    def jsonifiable(obj):
+        try:
+            json.dumps(obj)
+            return True
+        except TypeError as e:
+            return False
+
+    def in_list(type_field_list, obj, field):
+        return any([type(obj) == type_ and field == field_ for type_, field_ in type_field_list])
+
+    class FuckUEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj.__class__, DeclarativeMeta):
+                fields = {}
+                for field in [x for x in dir(obj) if not x.startswith('_') and x != 'metadata']:
+                    data = obj.__getattribute__(field)
+                    if not in_list(blocklist, obj, field):
+                        if jsonifiable(data) or in_list(allowlist, obj, field):
+                            fields[field] = data
+                        else:
+                            fields[field] = None
+                # a json-encodable dict
+                return fields
+            return json.JSONEncoder.default(self, obj)
+    return FuckUEncoder
+
+def fuckujson(obj):
+    return json.dumps(
+        obj,
+        cls=nested_jsonifier([
+            (server.data.test.Test, 'questions'),
+            (server.data.question.Question, 'answers'),
+            (server.data.people.People, 'exams'),
+            (server.data.exam.Exam, 'answers'),
+        ], [
+            (server.data.people.People, 'password'),
+            (server.data.people.People, 'set_password'),
+            (server.data.people.People, 'get_password'),
+        ]),
+        check_circular=False
+    )
 
 class EasyAlchemyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -75,7 +130,8 @@ def people_get():
     response_object = {'status': 'success'}
     response_object['people'] = session.query(People).all()
     # return jsonify(response_object)
-    return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    #return json.dumps(response_object, cls=new_alchemy_encoder(), check_circular=False)
+    return fuckujson(response_object)
 
 
 @app.route('/tests', methods=['GET'])
@@ -84,7 +140,8 @@ def test_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
     response_object['tests'] = session.query(Test).all()
-    return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    #return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    return fuckujson(response_object)
 
 
 @app.route('/tests/<id_test>', methods=['GET'])
@@ -121,10 +178,10 @@ def exam_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
     response_object['exam'] = session.query(Exam).all()
-    return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    #return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    return fuckujson(response_object)
 
-
-@app.route('/register/', methods=('POST',))
+@app.route('/registration', methods=('POST',))
 def register():
     session = db_session.create_session()
     response_object = {'status': 'success'}
@@ -142,6 +199,7 @@ def register():
         response_object['message'] = 'Registration complete'
     else:
         response_object['message'] = 'Such username already exist. Try another one'
+        response_object['status'] = False
     return jsonify(response_object)
 
 
@@ -156,12 +214,9 @@ def login():
         access_token = create_access_token(identity=user.username)
         response_object['token'] = access_token
     else:
-        response_object['message'] = 'Uncorrect username/password'
-        response_object['status'] = 'false'
+        response_object['message'] = 'Incorrect username/password'
+        response_object['status'] = False
     return jsonify(response_object)
-
-
-
 
 
 @app.route('/people', methods=['POST'])
@@ -247,26 +302,49 @@ def answer_post(id_question):
     return jsonify(response_object)
 
 
+@app.route('/am_i_logged', methods=['GET'])
+@jwt_required
+def am_i_logged():
+    session = db_session.create_session()
+    id_people = get_jwt_identity()
+    return json.dumps({'name': session.query(People).filter(People.username == get_jwt_identity()).first().name})
+
+
+
 @app.route('/exams', methods=['POST'])
+@jwt_required
 def exam_post():
     session = db_session.create_session()
     post_data = request.get_json()
     response_object = {'status': 'success'}
-    exams = session.query(Exam).filter(post_data.get('id_exam') == Exam.id_exam).all()
-    if not exams:
-        exam = Exam(
-            mark=post_data.get('mark'),
-            date=post_data.get('date'),
-            id_people=post_data.get('id_people'),
-            answers=post_data.get('answers'),  # TODO:Check how to do an
-            id_test=post_data.get('id_test')
-        )
-        session.add(exam)
-        session.commit()
-        response_object['message'] = 'New exam created successfully'
-    else:
-        response_object['message'] = 'Such exam already exist'
+    id_people = get_jwt_identity()
+    id_people = session.query(People).filter(People.username == get_jwt_identity()).first().id_people
+    answers = session.query(Answer).filter(Answer.id_answer.in_(post_data['answers'].keys())).all()
+    mark = sum([answer.mark for answer in answers])
+    id_test = session.query(Test).filter(Test.test_name == post_data['test_name']).first().id_test
+    exam = Exam(
+        mark=mark,
+        date=func.now(),
+        id_people=id_people,
+        answers=answers,
+        id_test=id_test
+    )
+    session.add(exam)
+    session.commit()
+    response_object['message'] = 'New exam created successfully'
     return json.dumps(response_object, cls=AlchemyEncoder)
+
+
+@app.route('/findtest/<test_name>', methods=['GET'])
+def get_test_by_name(test_name):
+    session = db_session.create_session()
+    response_object = {'status': 'success'}
+    test = session.query(Test).filter(test_name == Test.test_name).first()
+    if test:
+        response_object['test'] = test
+    else:
+        response_object['message'] = "No such test"
+    return fuckujson(response_object) #json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
 
 
 @app.route('/people/<id_people>', methods=['PUT'])

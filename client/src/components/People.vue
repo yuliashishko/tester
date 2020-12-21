@@ -1,5 +1,7 @@
 <template>
-  <div class="container">
+  <div>
+    <Navigation></Navigation>
+  <div class="container p-5">
     <div class="row">
       <div class="col-sm-10">
         <h1>People</h1>
@@ -147,11 +149,13 @@
       </b-form>
     </b-modal>
   </div>
+  </div>
 </template>
 
 <script>
 import axios from 'axios';
 import Alert from './Alert.vue';
+import Navigation from "./Navigation";
 
 export default {
   data() {
@@ -176,6 +180,7 @@ export default {
     };
   },
   components: {
+    Navigation,
     alert: Alert,
   },
   methods: {

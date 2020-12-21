@@ -14,13 +14,15 @@
 </template>
 
 <script>
-import axios from "axios";
+import axios from 'axios';
+import Alert from './Alert.vue';
 import Vue from "vue";
 
 export default {
   showMessage: false,
   message:'',
   status:'',
+  name: 'Login',
   data() {
     return {
       inputForm: {
@@ -28,6 +30,10 @@ export default {
         password: ""
       }
     }
+  },
+
+  components: {
+    alert: Alert,
   },
   methods: {
     login() {
