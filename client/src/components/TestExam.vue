@@ -103,7 +103,7 @@ export default {
         answers.push(question.selected)
       }
       var payload = {
-        'answers': this.answers,
+        'answers': answers,
         'test_name': this.test_name,
       }
       axios.post(path, payload, {

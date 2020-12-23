@@ -1,109 +1,112 @@
 <template>
-  <div class="container">
-    <div class="row">
-      <div class="col-sm-10">
-        <h1>Answers</h1>
-        <hr>
-        <br><br>
-        <alert :message=message v-if="showMessage"></alert>
-        <button type="button" class="btn btn-success btn-sm" v-b-modal.answer-modal>Add answer</button>
-        <br><br>
-        <table class="table table-hover">
+  <div>
+    <Navigation></Navigation>
+    <div class="container p-5">
+      <div class="row">
+        <div class="col-sm-10">
+          <h1>Answers</h1>
+          <hr>
+          <br><br>
+          <alert :message=message v-if="showMessage"></alert>
+          <button type="button" class="btn btn-success btn-sm" v-b-modal.answer-modal>Add answer</button>
+          <br><br>
+          <table class="table table-hover">
             <thead>
-              <tr>
-                <th scope="col">Answer text</th>
-                <th scope="col">mark</th>
-                <th></th>
-              </tr>
+            <tr>
+              <th scope="col">Answer text</th>
+              <th scope="col">mark</th>
+              <th></th>
+            </tr>
             </thead>
-          <tbody>
-          <tr v-for="(answer, index) in answers" :key="index">
-            <td>{{answer.answer_text }}</td>
-            <td>{{answer.mark }}</td>
-            <td>
-              <div class="btn-group" role="group">
-                <button
-                  type="button"
-                  class="btn btn-warning btn-sm"
-                  v-b-modal.answer-update-modal
-                  @click="editAnswer(answer)">
-                  Update
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-danger btn-sm"
-                  @click="onDeleteAnswer(answer)">
-                  Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-          </tbody>
-        </table>
+            <tbody>
+            <tr v-for="(answer, index) in answers" :key="index">
+              <td>{{ answer.answer_text }}</td>
+              <td>{{ answer.mark }}</td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button
+                    type="button"
+                    class="btn btn-warning btn-sm"
+                    v-b-modal.answer-update-modal
+                    @click="editAnswer(answer)">
+                    Update
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    @click="onDeleteAnswer(answer)">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+      <b-modal ref="addAnswerModal"
+               id="answer-modal"
+               title="Add a new answer"
+               hide-footer>
+        <b-form @submit="onSubmit" @reset="onReset" class="w-100">
+          <b-form-group id="form-text-group"
+                        label="text:"
+                        label-for="form-name-input">
+            <b-form-input id="form-text-input"
+                          type="text"
+                          v-model="addAnswerForm.answer_text"
+                          required
+                          placeholder="Enter answer text">
+            </b-form-input>
+          </b-form-group>
+          <b-form-group id="form-mark-group"
+                        label="mark:"
+                        label-for="form-mark-input">
+            <b-form-input id="form-mark-input"
+                          type="text"
+                          v-model="addAnswerForm.mark"
+                          required
+                          placeholder="Enter mark">
+            </b-form-input>
+          </b-form-group>
+          <b-button-group>
+            <b-button type="submit" variant="primary">Submit</b-button>
+            <b-button type="reset" variant="danger">Reset</b-button>
+          </b-button-group>
+        </b-form>
+      </b-modal>
+      <b-modal ref="editAnswerModal"
+               id="answer-update-modal"
+               title="Update"
+               hide-footer>
+        <b-form @submit="onSubmitUpdate" @reset="onResetUpdate" class="w-100">
+          <b-form-group id="form-text-edit-group"
+                        label="answer text:"
+                        label-for="form-name-edit-input">
+            <b-form-input id="form-text-edit-input"
+                          type="text"
+                          v-model="editForm.answer_text"
+                          required
+                          placeholder="Enter answer text">
+            </b-form-input>
+          </b-form-group>
+          <b-form-group id="form-mark-edit-group"
+                        label="mark:"
+                        label-for="form-mark-edit-input">
+            <b-form-input id="form-mark-edit-input"
+                          type="text"
+                          v-model="editForm.mark"
+                          required
+                          placeholder="Enter mark">
+            </b-form-input>
+          </b-form-group>
+          <b-button-group>
+            <b-button type="submit" variant="primary">Update</b-button>
+            <b-button type="reset" variant="danger">Cancel</b-button>
+          </b-button-group>
+        </b-form>
+      </b-modal>
     </div>
-    <b-modal ref="addAnswerModal"
-             id="answer-modal"
-             title="Add a new answer"
-             hide-footer>
-      <b-form @submit="onSubmit" @reset="onReset" class="w-100">
-        <b-form-group id="form-text-group"
-                      label="text:"
-                      label-for="form-name-input">
-          <b-form-input id="form-text-input"
-                        type="text"
-                        v-model="addAnswerForm.answer_text"
-                        required
-                        placeholder="Enter answer text">
-          </b-form-input>
-        </b-form-group>
-        <b-form-group id="form-mark-group"
-                      label="mark:"
-                      label-for="form-mark-input">
-          <b-form-input id="form-mark-input"
-                        type="text"
-                        v-model="addAnswerForm.mark"
-                        required
-                        placeholder="Enter mark">
-          </b-form-input>
-        </b-form-group>
-        <b-button-group>
-          <b-button type="submit" variant="primary">Submit</b-button>
-          <b-button type="reset" variant="danger">Reset</b-button>
-        </b-button-group>
-      </b-form>
-    </b-modal>
-    <b-modal ref="editAnswerModal"
-             id="answer-update-modal"
-             title="Update"
-             hide-footer>
-      <b-form @submit="onSubmitUpdate" @reset="onResetUpdate" class="w-100">
-        <b-form-group id="form-text-edit-group"
-                      label="answer text:"
-                      label-for="form-name-edit-input">
-          <b-form-input id="form-text-edit-input"
-                        type="text"
-                        v-model="editForm.answer_text"
-                        required
-                        placeholder="Enter answer text">
-          </b-form-input>
-        </b-form-group>
-        <b-form-group id="form-mark-edit-group"
-                      label="mark:"
-                      label-for="form-mark-edit-input">
-          <b-form-input id="form-mark-edit-input"
-                        type="text"
-                        v-model="editForm.mark"
-                        required
-                        placeholder="Enter mark">
-          </b-form-input>
-        </b-form-group>
-        <b-button-group>
-          <b-button type="submit" variant="primary">Update</b-button>
-          <b-button type="reset" variant="danger">Cancel</b-button>
-        </b-button-group>
-      </b-form>
-    </b-modal>
   </div>
 </template>
 
@@ -111,6 +114,7 @@
 import axios from 'axios';
 import Alert from './Alert.vue';
 import Vue from "vue";
+import Navigation from "./Navigation";
 
 
 export default {
@@ -134,6 +138,7 @@ export default {
     };
   },
   components: {
+    Navigation,
     alert: Alert,
   },
   methods: {

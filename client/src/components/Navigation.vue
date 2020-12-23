@@ -13,12 +13,12 @@
         <li class="nav-item">
           <a @click="onTests()" class="nav-link">Tests</a>
         </li>
-        <lo class="nav-item">
+        <li class="nav-item">
           <a @click="onQuestions()" class="nav-link">Questions</a>
-        </lo>
-        <lo class="nav-item">
-          <a @click="onStatictics()" class="nav-link">Statistics</a>
-        </lo>
+        </li>
+        <li class="nav-item">
+          <a @click="onStatistics()" class="nav-link">Statistics</a>
+        </li>
       </ul>
       <div class="form-inline mt-2 mt-md-0">
         <ul class="navbar-nav mr-auto">

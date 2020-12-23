@@ -11,6 +11,7 @@ import Login from "./components/Login";
 import Registration from "./components/Registration";
 import Main from "./components/Main";
 import TestExam from "./components/TestExam";
+import Statistics from "./components/Statistics";
 
 Vue.use(Router);
 
@@ -57,6 +58,11 @@ export default new Router({
       path: '/registration',
       name: 'Registration',
       component: Registration,
+    },
+    {
+      path: '/statistics',
+      name: 'Statistics',
+      component: Statistics,
     },
     {
       path: '/ping',

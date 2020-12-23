@@ -4,7 +4,7 @@ import time
 import sqlalchemy
 from flask import Flask, render_template, request, jsonify
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from sqlalchemy.ext.declarative import DeclarativeMeta
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash
@@ -55,7 +55,6 @@ def new_alchemy_encoder():
                 # a json-encodable dict
                 return fields
 
-
             return json.JSONEncoder.default(self, obj)
 
     return AlchemyEncoder
@@ -86,7 +85,9 @@ def nested_jsonifier(allowlist, blocklist):
                 # a json-encodable dict
                 return fields
             return json.JSONEncoder.default(self, obj)
+
     return FuckUEncoder
+
 
 def fuckujson(obj):
     return json.dumps(
@@ -94,7 +95,8 @@ def fuckujson(obj):
         cls=nested_jsonifier([
             (server.data.test.Test, 'questions'),
             (server.data.question.Question, 'answers'),
-            (server.data.people.People, 'exams'),
+            (server.data.exam.Exam, 'people'),
+            (server.data.exam.Exam, 'test'),
             (server.data.exam.Exam, 'answers'),
         ], [
             (server.data.people.People, 'password'),
@@ -103,6 +105,7 @@ def fuckujson(obj):
         ]),
         check_circular=False
     )
+
 
 class EasyAlchemyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -130,7 +133,7 @@ def people_get():
     response_object = {'status': 'success'}
     response_object['people'] = session.query(People).all()
     # return jsonify(response_object)
-    #return json.dumps(response_object, cls=new_alchemy_encoder(), check_circular=False)
+    # return json.dumps(response_object, cls=new_alchemy_encoder(), check_circular=False)
     return fuckujson(response_object)
 
 
@@ -140,7 +143,23 @@ def test_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
     response_object['tests'] = session.query(Test).all()
-    #return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    # return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    return fuckujson(response_object)
+
+
+@app.route('/statistics', methods=['POST'])
+@jwt_required
+def get_statistics():
+    session = db_session.create_session()
+    response_object = {'status': 'success'}
+    get_data = request.get_json()
+    groups = get_data.get('groups')
+    exams = session.query(Exam).\
+        join(Test, Exam.id_test == Test.id_test).\
+        join(People, Exam.id_people == People.id_people).\
+        filter(and_(People.group.in_(groups), (Test.test_name == get_data.get('test_name')))).all()
+    response_object['exams'] = exams
+    response_object['test_name'] = get_data.get('test_name')
     return fuckujson(response_object)
 
 
@@ -178,8 +197,9 @@ def exam_get():
     session = db_session.create_session()
     response_object = {'status': 'success'}
     response_object['exam'] = session.query(Exam).all()
-    #return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    # return json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
     return fuckujson(response_object)
+
 
 @app.route('/registration', methods=('POST',))
 def register():
@@ -310,7 +330,6 @@ def am_i_logged():
     return json.dumps({'name': session.query(People).filter(People.username == get_jwt_identity()).first().name})
 
 
-
 @app.route('/exams', methods=['POST'])
 @jwt_required
 def exam_post():
@@ -319,7 +338,8 @@ def exam_post():
     response_object = {'status': 'success'}
     id_people = get_jwt_identity()
     id_people = session.query(People).filter(People.username == get_jwt_identity()).first().id_people
-    answers = session.query(Answer).filter(Answer.id_answer.in_(post_data['answers'].keys())).all()
+    answers = session.query(Answer).filter(Answer.id_answer.in_(post_data['answers'])).all()
+
     mark = sum([answer.mark for answer in answers])
     id_test = session.query(Test).filter(Test.test_name == post_data['test_name']).first().id_test
     exam = Exam(
@@ -344,7 +364,7 @@ def get_test_by_name(test_name):
         response_object['test'] = test
     else:
         response_object['message'] = "No such test"
-    return fuckujson(response_object) #json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
+    return fuckujson(response_object)  # json.dumps(response_object, cls=AlchemyEncoder, check_circular=False)
 
 
 @app.route('/people/<id_people>', methods=['PUT'])
